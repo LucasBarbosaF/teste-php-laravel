@@ -1,5 +1,5 @@
 # Usa a imagem oficial do PHP sem Apache
-FROM php:8.2-cli
+FROM php:8.1-cli
 
 # Instala dependências
 RUN apt-get update && apt-get install -y \

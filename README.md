@@ -82,7 +82,7 @@ Isso irá levantar o container do seu projeto Laravel com a configuração do SQ
 ### 5. Rodando as Migrações
 O próximo passo é rodar as migrações para criar as tabelas necessárias no banco de dados SQLite. Execute o seguinte comando:
 ```bash
-docker-compose exec app php artisan migrate
+docker-compose exec app php artisan migrate --seed
 ```
 Isso irá criar o banco de dados e as tabelas necessárias dentro do arquivo SQLite.
 

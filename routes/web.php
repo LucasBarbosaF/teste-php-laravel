@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Documents\DocumentController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -15,4 +16,10 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('welcome');
+});
+
+Route::prefix('documents')->name('documents.')->group(function(){
+    Route::get('/', [DocumentController::class, 'index'])->name('index');
+    Route::post('/import-document', [DocumentController::class, 'importDocument'])->name('import-document');
+    Route::post('/process-document', [DocumentController::class, 'processDocument'])->name('process-document');
 });

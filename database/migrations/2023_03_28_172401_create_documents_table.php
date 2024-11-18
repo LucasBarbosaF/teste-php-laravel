@@ -13,15 +13,11 @@ return new class extends Migration
     {
         Schema::create('documents', function (Blueprint $table) {
             $table->id();
-            $table->timestamps();
-            $table->bigInteger('category_id');
             $table->string('title', 60);
             $table->text('contents');
-
-            $table->foreign('category_id')
-                ->references('id')
-                ->on('categories')
-                ->onDelete('cascade');
+            $table->unsignedBigInteger('category_id'); // `unsignedBigInteger` para chave estrangeira
+            $table->foreign('category_id')->references('id')->on('categories')->onDelete('cascade');
+            $table->timestamps();
         });
     }
 

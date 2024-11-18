@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: teste-php-laravel
+    volumes:
+      - ./:/var/www/html
+      - ./database:/var/www/html/database 
+    ports:
+      - "8000:8000"
+    environment:
+      - DB_CONNECTION=sqlite
+      - DB_DATABASE=/var/www/html/database/schema/database.sqlite
+    depends_on: []

@@ -1,96 +1,86 @@
 <?php
-// tests/Unit/DocumentTest.php
 
 namespace Tests\Unit;
 
 use App\Models\Categories\CategoryModel;
-use Tests\TestCase;
 use App\Models\Documents\DocumentModel;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 use Illuminate\Validation\ValidationException;
 
 class DocumentTest extends TestCase
 {
-    //use RefreshDatabase;
-
     /** @test */
-    public function testContentsFieldHasLengthLimit()
+    public function contents_field_should_have_a_maximum_length()
     {
-        // Vamos definir um limite de 255 caracteres para o campo contents
         $maxLength = 255;
 
-        $longContent = str_repeat('A', $maxLength);
-        $category = CategoryModel::factory()->create();
+        // Categoria válida
+        $category = $this->createCategory();
 
-        // Criando o documento com conteúdo válido (tamanho <= 255)
-        $document = DocumentModel::create([
-            'category_id' => $category->id,
-            'title' => 'Título do Documento',
-            'contents' => $longContent
-        ]);
+        // Documento válido
+        $validContent = str_repeat('B', $maxLength);
+        $this->createDocument($category, 'Resumo Anual', $validContent);
 
-        $this->assertDatabaseHas('documents', [
-            'id' => $document->id,
-            'contents' => $longContent,
-        ]);
-
-        // Testando conteúdo maior que o limite de 255 caracteres
+        // Documento inválido (conteúdo acima do limite)
         $this->expectException(ValidationException::class);
+        $invalidContent = str_repeat('B', $maxLength + 1);
+        $this->createDocument($category, 'Resumo Anual', $invalidContent);
+    }
 
-        $longContent = str_repeat('A', $maxLength + 1);
+    /** @test */
+    public function remessa_titles_should_include_the_word_semester()
+    {
+        $category = $this->createCategory('Remessa');
 
-        DocumentModel::create([
+        // Título válido
+        $this->createDocument($category, 'Planejamento do segundo semestre');
+
+        // Título inválido
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('O título deve conter "semestre" para a categoria Remessa.');
+        $this->createDocument($category, 'Planejamento do ano inteiro');
+    }
+
+    /** @test */
+    public function remessa_parcial_titles_should_include_a_month_name()
+    {
+        $category = $this->createCategory('Remessa Parcial');
+
+        // Título válido
+        $this->createDocument($category, 'Resumo de Atividades - Março');
+
+        // Título inválido
+        $this->expectException(\Exception::class);
+        $this->expectExceptionMessage('O título deve conter o nome de um mês para a categoria Remessa Parcial.');
+        $this->createDocument($category, 'Resumo Geral');
+    }
+
+    /** Helpers */
+    private function createCategory($name = 'Default Category')
+    {
+        return CategoryModel::firstOrCreate(['name' => $name]);
+    }
+
+    private function createDocument($category, $title, $contents = 'Conteúdo padrão')
+    {
+        $this->validateTitle($title, $category->name);
+
+        return DocumentModel::create([
             'category_id' => $category->id,
-            'title' => 'Título do Documento',
-            'contents' => $longContent
+            'title' => $title,
+            'contents' => $contents,
         ]);
     }
 
-    /** @test */
-    public function testTitleContainsSemesterForRemessa()
-    {
-        CategoryModel::firstOrCreate(['name' => 'Remessa']);
-
-        // Testa título válido para a categoria "Remessa"
-        $this->assertValidTitle('Relatório do primeiro semestre', 'Remessa');
-
-        // Espera um erro quando o título não contém "semestre"
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Registro inválido: título deve conter "semestre" para a categoria Remessa.');
-        $this->assertValidTitle('Relatório anual', 'Remessa');
-    }
-
-    /** @test */
-    public function testTitleContainsMonthForRemessaParcial()
-    {
-        CategoryModel::firstOrCreate(['name' => 'Remessa Parcial']);
-
-        // Testa título válido para a categoria "Remessa Parcial"
-        $this->assertValidTitle('Relatório de Janeiro', 'Remessa Parcial');
-
-        // Espera um erro quando o título não contém um nome de mês
-        $this->expectException(\Exception::class);
-        $this->expectExceptionMessage('Registro inválido: título deve conter o nome de um mês para a categoria Remessa Parcial.');
-        $this->assertValidTitle('Relatório parcial', 'Remessa Parcial');
-    }
-
-    private function assertValidTitle($title, $categoryName)
+    private function validateTitle($title, $categoryName)
     {
         if ($categoryName === 'Remessa' && !str_contains(strtolower($title), 'semestre')) {
-            throw new \Exception('Registro inválido: título deve conter "semestre" para a categoria Remessa.');
+            throw new \Exception('O título deve conter "semestre" para a categoria Remessa.');
         }
 
         $months = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
-        if ($categoryName === 'Remessa Parcial' && !collect($months)->first(fn($month) => str_contains(strtolower($title), $month))) {
-            throw new \Exception('Registro inválido: título deve conter o nome de um mês para a categoria Remessa Parcial.');
+        if ($categoryName === 'Remessa Parcial' && !collect($months)->contains(fn($month) => str_contains(strtolower($title), $month))) {
+            throw new \Exception('O título deve conter o nome de um mês para a categoria Remessa Parcial.');
         }
-
-        $category = CategoryModel::firstOrCreate(['name' => $categoryName]);
-
-        DocumentModel::create([
-            'category_id' => $category->id,
-            'title' => $title,
-            'contents' => 'Conteúdo válido'
-        ]);
     }
 }

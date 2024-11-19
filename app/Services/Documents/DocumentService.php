@@ -4,23 +4,29 @@ namespace App\Services\Documents;
 
 use App\Exceptions\DocumentException;
 use App\Jobs\Documents\DocumentJob;
+use Illuminate\Support\Facades\Storage;
 
 class DocumentService
 {
-    public function import($filePath)
+    protected $validator;
+
+    public function __construct(DocumentValidator $validator)
     {
-        if (!file_exists($filePath)) {
+        $this->validator = $validator;
+    }
+
+    public function import($filePath): void
+    {
+        if (!Storage::disk('local')->exists($filePath)) {
             throw new DocumentException('Arquivo não encontrado.');
         }
 
-        $data = json_decode(file_get_contents($filePath), true);
+        $data = json_decode(Storage::get($filePath));
+        $documents = $data->documentos;
 
-        if (!$data || !is_array($data)) {
-            throw new DocumentException('O arquivo JSON está vazio ou inválido.');
-        }
-
-        foreach ($data['documentos'] as $record) {
-            DocumentJob::dispatch($record);
+        foreach ($documents as $document) {
+            $this->validator->validate($document);
+            DocumentJob::dispatch($document);
         }
     }
 }

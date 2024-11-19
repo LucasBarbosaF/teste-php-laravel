@@ -5,6 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{$title}}</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        .custom-file-input {
+            cursor: pointer;
+        }
+        .custom-file-label {
+            overflow: hidden;
+        }
+    </style>
 </head>
 <body>
 <div class="container mt-5">
@@ -19,9 +27,18 @@
                     <p class="card-text text-center text-muted">
                         Clique no botão abaixo para importar documentos para a fila.
                     </p>
-                    <form action="{{ route('documents.import-document') }}" method="POST">
+                    <form action="{{ route('documents.import-document') }}" method="POST" enctype="multipart/form-data">
                         @csrf
-                        <button type="submit" class="btn btn-primary btn-block">Importar para a Fila</button>
+                        <div class="form-group">
+                            <div class="custom-file">
+                                <input type="file" id="document" name="document" class="custom-file-input" accept=".json" required value="{{ old('document') }}">
+                                <label class="custom-file-label" for="document">Escolha o arquivo json...</label>
+                            </div>
+                            @error('document')
+                            <span class="text-danger">{{ $message }}</span>
+                            @enderror
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-block mt-3">Importar para a Fila</button>
                     </form>
                 </div>
             </div>
@@ -53,5 +70,14 @@
         </div>
     </div>
 </div>
+
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.5.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $('.custom-file-input').on('change', function(e) {
+        const fileName = e.target.files[0]?.name || "Escolha o arquivo...";
+        $(this).next('.custom-file-label').html(fileName);
+    });
+</script>
 </body>
 </html>

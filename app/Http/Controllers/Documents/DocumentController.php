@@ -4,17 +4,22 @@ namespace App\Http\Controllers\Documents;
 
 use App\Exceptions\DocumentException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\documents\DocumentRequest;
+use App\Models\Documents\DocumentModel;
 use App\Services\Documents\DocumentService;
+use App\Services\Documents\FileStorageService;
 use Illuminate\Support\Facades\Artisan;
 
 class DocumentController extends Controller
 {
 
     protected $importService;
+    protected $fileStorageService;
 
-    public function __construct(DocumentService $importService)
+    public function __construct(DocumentService $importService, FileStorageService  $fileStorageService)
     {
         $this->importService = $importService;
+        $this->fileStorageService = $fileStorageService;
     }
 
     
@@ -25,10 +30,10 @@ class DocumentController extends Controller
         ]);
     }
 
-    public function importDocument()
+    public function importDocument(DocumentRequest $request)
     {
         try {
-            $filePath = storage_path('data/2023-03-28.json');
+            $filePath = $this->fileStorageService->storeFile($request);
             $this->importService->import($filePath);
             return back()->with('success', 'Os registros foram adicionados à fila de importação.');            
         } catch (DocumentException $e) {

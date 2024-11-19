@@ -21,7 +21,7 @@ class DocumentJob implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(array $document)
+    public function __construct($document)
     {
         $this->document = $document;
     }
@@ -31,10 +31,10 @@ class DocumentJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $category = CategoryModel::where('name', $this->document['categoria'])->firstOrFail();
+        $category = CategoryModel::where('name', $this->document->categoria)->firstOrFail();
         DocumentModel::create([
-            'title' => $this->document['titulo'],
-            'contents' => $this->document['conteúdo'],
+            'title' => $this->document->titulo,
+            'contents' => $this->document->conteúdo,
             'category_id' => $category->id
         ]);
         Log::info("Job Processado com sucesso");
